@@ -138,7 +138,7 @@ public class JingleOfferFactory
     }
 
     /**
-     * Adds the audio-related extensions for an offer to a
+     * Adds the video-related extensions for an offer to a
      * {@link ContentPacketExtension}.
      * @param content the {@link ContentPacketExtension} to add extensions to.
      */
@@ -155,6 +155,15 @@ public class JingleOfferFactory
             toOffset.setID(String.valueOf(config.tof.id()));
             toOffset.setURI(URI.create("urn:ietf:params:rtp-hdrext:toffset"));
             rtpDesc.addExtmap(toOffset);
+        }
+
+        if (config.mid.enabled())
+        {
+            // a=extmap:10 rn:ietf:params:rtp-hdrext:sdes:mid
+            RTPHdrExtPacketExtension mid = new RTPHdrExtPacketExtension();
+            mid.setID(String.valueOf(config.mid.id()));
+            mid.setURI(URI.create("urn:ietf:params:rtp-hdrext:sdes:mid"));
+            rtpDesc.addExtmap(mid);
         }
 
         if (config.absSendTime.enabled())
@@ -265,6 +274,18 @@ public class JingleOfferFactory
 
                 // a=fmtp:97 apt=101
                 addParameterExtension(rtxVP9, "apt", String.valueOf(config.vp9.pt()));
+
+                // Chrome doesn't have these when it creates an offer, but they were
+                // observed in a hangouts conference. Not sure whether they have any
+                // effect.
+                // a=rtcp-fb:96 ccm fir
+                rtxVP9.addRtcpFeedbackType(createRtcpFbPacketExtension("ccm", "fir"));
+
+                // a=rtcp-fb:96 nack
+                rtxVP9.addRtcpFeedbackType(createRtcpFbPacketExtension("nack", null));
+
+                // a=rtcp-fb:96 nack pli
+                rtxVP9.addRtcpFeedbackType(createRtcpFbPacketExtension("nack", "pli"));
             }
 
             if (config.h264.rtxEnabled())
@@ -392,7 +413,7 @@ public class JingleOfferFactory
     }
 
     /**
-     * Adds the video-related extensions for an offer to a
+     * Adds the audio-related extensions for an offer to a
      * {@link ContentPacketExtension}.
      * @param content the {@link ContentPacketExtension} to add extensions to.
      */
@@ -408,6 +429,15 @@ public class JingleOfferFactory
             ssrcAudioLevel.setID(String.valueOf(config.audioLevel.id()));
             ssrcAudioLevel.setURI(URI.create("urn:ietf:params:rtp-hdrext:ssrc-audio-level"));
             rtpDesc.addExtmap(ssrcAudioLevel);
+        }
+
+        if (config.mid.enabled())
+        {
+            // a=extmap:10 rn:ietf:params:rtp-hdrext:sdes:mid
+            RTPHdrExtPacketExtension mid = new RTPHdrExtPacketExtension();
+            mid.setID(String.valueOf(config.mid.id()));
+            mid.setURI(URI.create("urn:ietf:params:rtp-hdrext:sdes:mid"));
+            rtpDesc.addExtmap(mid);
         }
 
         if (config.opus.enabled())

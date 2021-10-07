@@ -31,6 +31,8 @@ import org.json.simple.JSONObject
 import org.json.simple.parser.JSONParser
 import org.jxmpp.jid.DomainBareJid
 import org.jxmpp.jid.impl.JidCreate
+import java.lang.IllegalArgumentException
+import kotlin.jvm.Throws
 
 /**
  * Adds the A/V moderation handling. Process incoming messages and when audio or video moderation is enabled,
@@ -40,7 +42,6 @@ class AvModerationHandler(
     private val xmppProvider: XmppProvider,
     private val conferenceStore: ConferenceStore
 ) : RegistrationListener, StanzaListener {
-    private val jsonParser = JSONParser()
     private var avModerationAddress: DomainBareJid? = null
     private val logger = createLogger()
 
@@ -63,7 +64,7 @@ class AvModerationHandler(
 
         TaskPools.ioPool.submit {
             try {
-                val incomingJson = jsonParser.parse(jsonMessage.json) as JSONObject
+                val incomingJson = JSONParser().parse(jsonMessage.json) as JSONObject
                 if (incomingJson["type"] == "av_moderation") {
                     val conferenceJid = JidCreate.entityBareFrom(incomingJson["room"]?.toString())
 
@@ -72,7 +73,6 @@ class AvModerationHandler(
                     }
 
                     val enabled = incomingJson["enabled"] as Boolean?
-                    val lists = incomingJson["whitelists"] as JSONObject?
 
                     if (enabled != null) {
                         val mediaType = MediaType.parseString(incomingJson["mediaType"] as String)
@@ -85,14 +85,17 @@ class AvModerationHandler(
                                 }, for mediaType=$mediaType"
                             )
                             // let's mute everyone
-                            conference.muteAllNonModeratorParticipants(mediaType)
+                            conference.muteAllParticipants(mediaType)
                         }
-                    } else if (lists != null) {
-                        conference.chatRoom.updateAvModerationWhitelists(lists as Map<String, List<String>>)
+                    } else {
+                        val lists = incomingJson["whitelists"]?.let { parseAsMapOfStringToListOfString(it) }
+                        if (lists != null) {
+                            conference.chatRoom.updateAvModerationWhitelists(lists)
+                        }
                     }
                 }
             } catch (e: Exception) {
-                logger.warn("Cannot parse json for av_moderation coming from ${stanza.from}")
+                logger.warn("Cannot parse json for av_moderation coming from ${stanza.from}", e)
             }
         }
     }
@@ -103,7 +106,7 @@ class AvModerationHandler(
      * We do that only once for the life of jicofo and skip it on reconnections.
      */
     override fun registrationChanged(registered: Boolean) {
-        if (!registered || avModerationAddress != null) {
+        if (!registered) {
             avModerationAddress = null
             return
         }
@@ -114,8 +117,13 @@ class AvModerationHandler(
 
             if (avModIdentities != null && avModIdentities.size > 0) {
                 avModerationAddress = JidCreate.domainBareFrom(avModIdentities[0].name)
+                logger.info("Discovered av_moderation component at $avModerationAddress.")
+            } else {
+                avModerationAddress = null
+                logger.info("Did not discover av_moderation component.")
             }
         } catch (e: Exception) {
+            avModerationAddress = null
             logger.error("Error checking for av_moderation component", e)
         }
     }
@@ -123,4 +131,21 @@ class AvModerationHandler(
     fun shutdown() {
         xmppProvider.xmppConnection.removeSyncStanzaListener(this)
     }
+}
+
+/**
+ * Parses the given object (expected to be a [JSONObject]) as a Map<String, List<String>>. Throws
+ * [IllegalArgumentException] if [o] is not of the expected type.
+ * @return a map that is guaranteed to have a runtime type of Map<String, List<String>>.
+ */
+@Throws(IllegalArgumentException::class)
+private fun parseAsMapOfStringToListOfString(o: Any): Map<String, List<String>> {
+    val jsonObject: JSONObject = o as? JSONObject ?: throw IllegalArgumentException("Not a JSONObject")
+    val map = mutableMapOf<String, List<String>>()
+    jsonObject.forEach { (k, v) ->
+        k as? String ?: throw IllegalArgumentException("Key is not a string")
+        v as? List<*> ?: throw IllegalArgumentException("Value is not a list")
+        map[k] = v.map { it.toString() }
+    }
+    return map
 }

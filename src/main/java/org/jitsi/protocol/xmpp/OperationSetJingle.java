@@ -17,11 +17,14 @@
  */
 package org.jitsi.protocol.xmpp;
 
+import org.jitsi.jicofo.conference.source.*;
 import org.jitsi.xmpp.extensions.jingle.*;
 
-import org.jitsi.protocol.xmpp.util.*;
 import org.jivesoftware.smack.*;
+import org.jivesoftware.smack.packet.*;
 import org.jxmpp.jid.*;
+
+import java.util.*;
 
 /**
  * Operation set allows to establish and control Jingle sessions. Exposed
@@ -37,58 +40,64 @@ public interface OperationSetJingle
      * {@code session-initiate} IQ. Blocks until a response is received or
      * until a timeout is reached.
      *
-     * @param jingleIQ the IQ to send.
+     * @param to the JID of the remote peer.
+     * @param contents the list of {@link ContentPacketExtension} to include.
+     * @param additionalExtensions additional extensions to add to the session-initiate stanza.
      * @param requestHandler <tt>JingleRequestHandler</tt> that will be bound
      * to new Jingle session instance.
+     * @param sources the sources to include in the Jingle offer.
+     * @param encodeSourcesAsJson whether to encode {@code sources} as JSON or standard Jingle.
      *
      * @return {@code true} the client didn't come back with en error response.
      */
     boolean initiateSession(
-        JingleIQ jingleIQ,
-        JingleRequestHandler requestHandler)
+        Jid to,
+        List<ContentPacketExtension> contents,
+        List<ExtensionElement> additionalExtensions,
+        JingleRequestHandler requestHandler,
+        ConferenceSourceMap sources,
+        boolean encodeSourcesAsJson)
         throws SmackException.NotConnectedException;
 
     Jid getOurJID();
 
     /**
-     * Sends a 'transport-replace' IQ to the client. Blocks waiting for a
-     * response and returns {@code true} if a response with type {@code result}
-     * is received before a certain timeout.
+     * Sends a 'transport-replace' IQ to the client. Blocks waiting for a response and returns {@code true} if a
+     * response with type {@code result} is received before a certain timeout.
      *
-     * @param jingleIQ the IQ which to be sent.
      * @param session the <tt>JingleSession</tt> for which the IQ will be sent.
+     * @param contents the list of {@link ContentPacketExtension} to include.
+     * @param additionalExtensions additional extensions to add to the session-initiate stanza.
+     * @param sources the sources to include in the Jingle offer.
+     * @param encodeSourcesAsJson whether to encode {@code sources} as JSON or standard Jingle.
      *
      * @return {@code true} the client didn't come back with an error response.
      */
-    boolean replaceTransport(JingleIQ jingleIQ, JingleSession session)
+    boolean replaceTransport(
+            JingleSession session,
+            List<ContentPacketExtension> contents,
+            List<ExtensionElement> additionalExtensions,
+            ConferenceSourceMap sources,
+            boolean encodeSourcesAsJson)
         throws SmackException.NotConnectedException;
 
     /**
      * Sends 'source-add' proprietary notification.
      *
-     * @param ssrcMap the media SSRCs map which will be included in
-     *                the notification.
-     * @param ssrcGroupMap the map of media SSRC groups that will be included in
-     *                     the notification.
+     * @param sources the sources to be included in the source-add message.
      * @param session the <tt>JingleSession</tt> used to send the notification.
+     * @param encodeSourcesAsJson whether to encode {@code sources} as JSON or standard Jingle.
      */
-    void sendAddSourceIQ(MediaSourceMap ssrcMap,
-                         MediaSourceGroupMap ssrcGroupMap,
-                         JingleSession session);
+    void sendAddSourceIQ(ConferenceSourceMap sources, JingleSession session, boolean encodeSourcesAsJson);
 
     /**
-     * Sends 'source-remove' notification to the peer of given
-     * <tt>JingleSession</tt>.
+     * Sends a 'source-remove' stanza to the remote Jingle peer.
      *
-     * @param ssrcMap the map of media SSRCs that will be included in
-     *                the notification.
-     * @param ssrcGroupMap the map of media SSRC groups that will be included in
-     *                     the notification.
+     * @param sourcesToRemove the sources to be included in the 'source-remove' stanza.
      * @param session the <tt>JingleSession</tt> used to send the notification.
+     * @param encodeSourcesAsJson whether to encode {@code sources} as JSON or standard Jingle.
      */
-    void sendRemoveSourceIQ(MediaSourceMap ssrcMap,
-                            MediaSourceGroupMap ssrcGroupMap,
-                            JingleSession session);
+    void sendRemoveSourceIQ(ConferenceSourceMap sourcesToRemove, JingleSession session, boolean encodeSourcesAsJson);
 
     /**
      * Terminates given Jingle session. This method is to be called either to send 'session-terminate' or to inform

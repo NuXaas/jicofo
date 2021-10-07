@@ -17,6 +17,7 @@
  */
 package org.jitsi.jicofo.discovery;
 
+import org.jetbrains.annotations.*;
 import org.jitsi.impl.protocol.xmpp.*;
 import org.jitsi.jicofo.xmpp.*;
 import org.jitsi.utils.logging2.*;
@@ -81,6 +82,11 @@ public class DiscoveryUtil
     public final static String FEATURE_DTLS = "urn:xmpp:jingle:apps:dtls:0";
 
     /**
+     * Jingle sources encoded as JSON.
+     */
+    public final static String FEATURE_JSON_SOURCES = "http://jitsi.org/json-encoded-sources";
+
+    /**
      * RTCP mux feature name.
      */
     public final static String FEATURE_RTCP_MUX = "urn:ietf:rfc:5761";
@@ -127,7 +133,8 @@ public class DiscoveryUtil
      * obtain it due to network failure default feature list is returned.
      * @param address XMPP address of the participant.
      */
-    public static List<String> discoverParticipantFeatures(XmppProvider xmppProvider, EntityFullJid address)
+    public static @NotNull List<String> discoverParticipantFeatures(@NotNull XmppProvider xmppProvider,
+        EntityFullJid address)
     {
         XMPPConnection xmppConnection = xmppProvider.getXmppConnection();
         if (!xmppConnection.isConnected())

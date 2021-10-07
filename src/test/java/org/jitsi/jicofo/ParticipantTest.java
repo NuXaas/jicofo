@@ -18,6 +18,7 @@
 package org.jitsi.jicofo;
 
 import mock.muc.*;
+import org.jitsi.jicofo.conference.*;
 import org.jitsi.utils.logging2.*;
 import org.junit.*;
 import org.junit.runner.*;
@@ -38,7 +39,8 @@ public class ParticipantTest
     {
         Participant p = new Participant(
                 new MockRoomMember(JidCreate.entityFullFrom("something@server.com/1234"), null),
-                new LoggerImpl(getClass().getName()));
+                new LoggerImpl(getClass().getName()),
+                null);
 
         p.setClock(Clock.fixed(Instant.now(), ZoneId.systemDefault()));
 

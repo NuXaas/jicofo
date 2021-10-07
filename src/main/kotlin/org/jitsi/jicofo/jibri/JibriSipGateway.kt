@@ -18,7 +18,7 @@
 package org.jitsi.jicofo.jibri
 
 import org.apache.commons.lang3.StringUtils
-import org.jitsi.jicofo.JitsiMeetConferenceImpl
+import org.jitsi.jicofo.conference.JitsiMeetConferenceImpl
 import org.jitsi.jicofo.jibri.JibriConfig.Companion.config
 import org.jitsi.jicofo.jibri.JibriSession.StartException
 import org.jitsi.jicofo.jibri.JibriSession.StartException.AllBusy
@@ -27,7 +27,7 @@ import org.jitsi.utils.logging2.Logger
 import org.jitsi.xmpp.extensions.jibri.JibriIq
 import org.jitsi.xmpp.extensions.jibri.SipCallState
 import org.jivesoftware.smack.packet.IQ
-import org.jivesoftware.smack.packet.XMPPError
+import org.jivesoftware.smack.packet.StanzaError
 import kotlin.collections.HashMap
 import org.jitsi.jicofo.util.ErrorResponse.create as error
 
@@ -95,14 +95,14 @@ class JibriSipGateway(
                 logger.warn("Failed to start a Jibri session: $reason", exc)
                 sipSessions.remove(iq.sipAddress)
                 when (exc) {
-                    is AllBusy -> error(iq, XMPPError.Condition.resource_constraint, "all Jibris are busy")
-                    is NotAvailable -> error(iq, XMPPError.Condition.service_unavailable, "no Jibris available")
-                    else -> error(iq, XMPPError.Condition.internal_server_error, reason)
+                    is AllBusy -> error(iq, StanzaError.Condition.resource_constraint, "all Jibris are busy")
+                    is NotAvailable -> error(iq, StanzaError.Condition.service_unavailable, "no Jibris available")
+                    else -> error(iq, StanzaError.Condition.internal_server_error, reason)
                 }
             }
         } else {
             // Bad request - no SIP address
-            error(iq, XMPPError.Condition.bad_request, "Stream ID is empty or undefined")
+            error(iq, StanzaError.Condition.bad_request, "Stream ID is empty or undefined")
         }
 
     override fun onSessionStateChanged(

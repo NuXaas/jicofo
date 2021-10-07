@@ -18,10 +18,12 @@
 package org.jitsi.jicofo;
 
 import org.jetbrains.annotations.*;
+import org.jitsi.jicofo.conference.*;
 import org.jitsi.jicofo.jibri.*;
 import org.jitsi.jicofo.stats.*;
 import org.jitsi.utils.logging2.*;
 import org.jitsi.utils.logging2.Logger;
+import org.jitsi.utils.queue.*;
 import org.json.simple.*;
 import org.jxmpp.jid.*;
 
@@ -514,6 +516,8 @@ public class FocusManager
 
         stats.put("jibri", JibriStats.getStats(jibriRecordersAndGateways));
 
+        stats.put("queues", QueueStatistics.Companion.getStatistics());
+
         return stats;
     }
 
@@ -522,7 +526,7 @@ public class FocusManager
         return statistics;
     }
 
-    boolean isJicofoIdConfigured()
+    public boolean isJicofoIdConfigured()
     {
         return octoId != 0;
     }

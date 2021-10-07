@@ -19,11 +19,10 @@ package org.jitsi.jicofo;
 
 import mock.jvb.*;
 import mock.xmpp.*;
-import org.jitsi.impl.protocol.xmpp.colibri.*;
 import org.jitsi.jicofo.codec.*;
+import org.jitsi.jicofo.conference.colibri.*;
 import org.jitsi.xmpp.extensions.colibri.*;
 import org.jitsi.xmpp.extensions.jingle.*;
-import org.jitsi.protocol.xmpp.colibri.*;
 import org.junit.*;
 import org.junit.runner.*;
 import org.junit.runners.*;
@@ -80,10 +79,6 @@ public class ColibriTest
 
         assertEquals("Peer 1 should have a single bundle allocated", 1, peer1Channels.getChannelBundles().size());
         assertEquals("Peer 2 should have a single bundle allocated", 1, peer2Channels.getChannelBundles().size());
-        assertEquals("Peer 1 should have a single endpoint allocated", 1, peer1Channels.getEndpoints().size());
-        assertEquals("Peer 2 should have a single endpoint allocated", 1, peer2Channels.getEndpoints().size());
-        assertEquals("Peer 1 has the wrong endpoint id allocated", peer1, peer1Channels.getEndpoints().get(0).getId());
-        assertEquals("Peer 2 has the wrong endpoint id allocated", peer2, peer2Channels.getEndpoints().get(0).getId());
 
         colibriConf.expireChannels(peer1Channels);
         colibriConf.expireChannels(peer2Channels);

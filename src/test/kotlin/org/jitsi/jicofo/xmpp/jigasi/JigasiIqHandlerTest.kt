@@ -26,7 +26,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
-import org.jitsi.jicofo.JitsiMeetConference
+import org.jitsi.jicofo.conference.JitsiMeetConference
 import org.jitsi.jicofo.jigasi.JigasiDetector
 import org.jitsi.jicofo.util.ListConferenceStore
 import org.jitsi.jicofo.xmpp.JigasiIqHandler
@@ -35,7 +35,7 @@ import org.jitsi.xmpp.extensions.rayo.RayoIqProvider.DialIq
 import org.jivesoftware.smack.packet.EmptyResultIQ
 import org.jivesoftware.smack.packet.ErrorIQ
 import org.jivesoftware.smack.packet.IQ
-import org.jivesoftware.smack.packet.XMPPError.Condition
+import org.jivesoftware.smack.packet.StanzaError.Condition
 import org.jxmpp.jid.impl.JidCreate
 
 class JigasiIqHandlerTest : ShouldSpec() {
@@ -138,7 +138,6 @@ class JigasiIqHandlerTest : ShouldSpec() {
 
 private fun IQ?.shouldBeError(condition: Condition? = null) {
     this.shouldBeInstanceOf<ErrorIQ>()
-    this as ErrorIQ
     if (condition != null)
         error.condition shouldBe condition
 }

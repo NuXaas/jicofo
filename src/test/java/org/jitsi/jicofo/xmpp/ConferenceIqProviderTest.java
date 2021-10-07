@@ -41,9 +41,12 @@ import static org.junit.Assert.assertNotNull;
  */
 public class ConferenceIqProviderTest
 {
+    private final XmlEnvironment jabberClientNs = new XmlEnvironment("jabber:client");
+
     @Test
     public void testParseConferenceIq()
-        throws Exception {
+        throws Exception
+    {
         // ConferenceIq
         String iqXml =
                 "<iq to='t' from='f' type='set'>" +
@@ -74,6 +77,36 @@ public class ConferenceIqProviderTest
         ConferenceIq.Property property2 = properties.get(1);
         assertEquals("name2", property2.getName());
         assertEquals("value2", property2.getValue());
+    }
+
+    @Test
+    public void testParseConferenceIqWithWrongRoom()
+        throws Exception
+    {
+        // ConferenceIq
+        String iqXml =
+                "<iq to='t' from='f' type='set'>" +
+                    "<conference xmlns='http://jitsi.org/protocol/focus'" +
+                        " room='somename@email.com@example.com' ready='true'>" +
+                    "</conference>" +
+                "</iq>";
+
+        // we expect that an exception will be thrown
+        Exception resultException = null;
+        try
+        {
+            ConferenceIqProvider provider = new ConferenceIqProvider();
+            IQUtils.parse(iqXml, provider);
+        }
+        catch(Exception e)
+        {
+            resultException = e;
+        }
+
+        assertNotNull(resultException);
+
+        // we expect XmppStringprepException
+        assertEquals(XmppStringprepException.class, resultException.getClass());
     }
 
     @Test
@@ -132,7 +165,7 @@ public class ConferenceIqProviderTest
                         "<property xmlns='http://jitsi.org/protocol/focus' name='name2' value='xyz2'/>" +
                         "</conference>" +
                         "</iq>",
-                conferenceIq.toXML().toString()), true);
+                conferenceIq.toXML(jabberClientNs).toString()), true);
     }
 
     @Test
@@ -159,6 +192,6 @@ public class ConferenceIqProviderTest
                         "url=\'" + encodedUrl + "\' " +
                         "room='room@sdaf.dsf.dsf'" +
                         "/>" +
-                        "</iq>", authUrlIQ.toXML().toString());
+                        "</iq>", authUrlIQ.toXML(jabberClientNs).toString());
     }
 }
